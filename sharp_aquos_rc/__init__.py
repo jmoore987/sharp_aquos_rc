@@ -25,7 +25,7 @@ class TV:
             s.send(self.auth)
             s.recv(1024)
             s.recv(1024)
-            s.send(str.encode(code1 + code2.ljust(4) + '\r'))
+            s.send(str.encode(code1 + str(code2).ljust(4) + '\r'))
             status = s.recv(1024)
         except:
             raise
