@@ -18,9 +18,20 @@ class TV:
         self.auth = str.encode(username + '\r' + password + '\r')
 
     def __send__(self, code1, code2):
+        """
+        Description:
+            
+            The TV doesn't handle long running connections very well, so we open a new connection every time.
+            There might be a better way to do this, but it's pretty quick and resilient.
+
+        Returns:
+            If a value is being requested ( opt2 is "?" ), then the return value is returned.
+            If a value is being set, it return True for "OK" or False for "ERR"
+        """
 
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(5)
             s.connect((self.ip, self.port))
             s.send(self.auth)
             s.recv(1024)
@@ -43,6 +54,13 @@ class TV:
                 return status
 
     def info(self):
+        """
+        Description:
+
+            Returns dict of information about the TV
+            name, model, version
+
+        """
         return {
                     "name": self.__send__('TVNM', '1'),
                     "model": self.__send__('MNRD', '1'),
