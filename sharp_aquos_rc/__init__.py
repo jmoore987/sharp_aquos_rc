@@ -26,43 +26,57 @@ class TV:
             s.recv(1024)
             s.recv(1024)
             s.send(str.encode(code1 + str(code2).ljust(4) + '\r'))
-            status = s.recv(1024)
+            status = bytes.decode(s.recv(1024)).strip()
         except:
             raise
         else:
             s.close()
 
-        return status
+        if status == "OK":
+            return True
+        elif status == "ERR":
+            return False
+        else:
+            try:
+                return int(status)
+            except ValueError:
+                return status
 
-    def power_on_command_settings(self, opt = 0):
+    def power_on_command_settings(self, opt = '?'):
         """
         Description:
-            Change whether or not the TV will respond to power() on/off commands
+
+            Manage whether or not the TV will respond to power() on/off commands
+            Call with no arguments to get current setting
 
         Arguments:
             opt: integer
-                0: disabled (default)
+                0: disabled 
                 1: accepted via RS232
                 2: accepted via TCP/IP
         """
-        self.__send__('RSPW', opt)
+        return self.__send__('RSPW', opt)
 
-    def power(self, opt = 0):
+    def power(self, opt = '?'):
         """
         Description:
+
             Power On/Off
+            Call with no arguments to get current setting
 
         Arguments:
             opt: integer
-                0: Off (default)
+                0: Off
                 1: On
         """
-        self.__send__('POWR', opt)
+        return self.__send__('POWR', opt)
 
-    def input(self, opt = 0):
+    def input(self, opt = '?'):
         """
         Description:
+
             Set the input
+            Call with no arguments to get current setting
 
         Arguments:
             opt: integer
@@ -78,18 +92,20 @@ class TV:
         """
             
         if opt == 0:
-            self.__send__('ITVD', opt)
+            return self.__send__('ITVD', opt)
         else:
-            self.__send__('IAVD', opt)
+            return self.__send__('IAVD', opt)
         
-    def av_mode(self, opt = 0):
+    def av_mode(self, opt = '?'):
         """
         Description:
+
             Set the A/V Mode
+            Call with no arguments to get current setting
 
         Arguments:
             opt: integer
-                0: Toggle (default)
+                0: Toggle
                 1: Standard (ENERGYSTAR)
                 2: Movie
                 3: Game
@@ -105,27 +121,31 @@ class TV:
                 17: Movie THX
                 100: Auto
         """
-        self.__send__('AVMD', opt)
+        return self.__send__('AVMD', opt)
 
-    def volume(self, opt = 0):
+    def volume(self, opt = '?'):
         """
         Description:
+
             Set the Volume
+            Call with no arguments to get current setting
 
         Arguments:
             opt: integer
             0 - 100: Volume Level
         """
-        self.__send__('VOLM', opt)
+        return self.__send__('VOLM', opt)
 
-    def view_mode(self, opt = 0):
+    def view_mode(self, opt = '?'):
         """
         Description:
+
             Set the View Mode
+            Call with no arguments to get current setting
 
         Arguments:
             opt: integer
-                0: Toggle (default) [AV]
+                0: Toggle [AV]
                 1: Side Bar [AV]
                 2: S. Stretch [AV]
                 3: Zoom [AV]
@@ -138,29 +158,33 @@ class TV:
                 10: Auto
                 11: Original
         """
-        self.__send__('WIDE', opt)
+        return self.__send__('WIDE', opt)
 
-    def mute(self, opt = 0):
+    def mute(self, opt = '?'):
         """
         Description:
+
             Mute On/Off
+            Call with no arguments to get current setting
 
         Arguments:
             opt: integer
-                0: Toggle (default)
+                0: Toggle
                 1: On
                 2: Off
         """
-        self.__send__('ACSU', opt)
+        return self.__send__('MUTE', opt)
 
-    def surround(self, opt):
+    def surround(self, opt = '?'):
         """
         Description:
+
             Set Surround Sound mode
+            Call with no arguments to get current setting
 
         Arguments:
             opt: integer
-                0: Toggle (default)
+                0: Toggle
                 1: On / Normal
                 2: Off
                 4: 3D Hall
@@ -168,37 +192,42 @@ class TV:
                 6: 3D Standard
                 7: 3D Stadium
         """
-        self.__send__('ACSU', opt)
+        return self.__send__('ACSU', opt)
 
-    def sleep(self, opt = 0):
+    def sleep(self, opt = '?'):
         """
         Description:
+
             Set Sleep Timer
+            Call with no arguments to get minutes until poweroff
 
         Arguments:
             opt: integer
-                0: Off (default)
+                0: Off
                 1: 30 minutes
                 2: 60 minutes
                 3: 90 minutes
                 4: 120 minutes
         """
-        self.__send__('OFTM', opt)
+        return self.__send__('OFTM', opt)
 
-    def analog_channel(self, opt):
+    def analog_channel(self, opt = '?'):
         """
         Description:
+
             Change Channel (Analog)
+            Call with no arguments to get current setting
 
         Arguments:
             opt: integer
                 (1-135): Channel
         """
-        self.__send__('DCCH', opt)
+        return self.__send__('DCCH', opt)
 
-    def digital_channel_air(self, opt1, opt2 = 0):
+    def digital_channel_air(self, opt1 = '?', opt2 = 1):
         """
         Description:
+
             Change Channel (Digital)
             Pass Channels "XX.YY" as TV.digital_channel_air(XX, YY)
 
@@ -208,11 +237,14 @@ class TV:
             opt2: integer (optional)
                 1-99: Minor Channel
         """
-        self.__send__('DA2P', (opt1 * 100) + opt2)
+        if opt1 == '?':
+            return self.__send__('DA2P', opt1)
+        return self.__send__('DA2P', (opt1 * 100) + opt2)
 
-    def digital_channel_cable(self, opt1, opt2 = 0):
+    def digital_channel_cable(self, opt1 = '?', opt2 = 1):
         """
         Description:
+
             Change Channel (Digital)
             Pass Channels "XXX.YYY" as TV.digital_channel_cable(XXX, YYY)
 
@@ -222,17 +254,19 @@ class TV:
             opt2: integer (optional)
                 0-999: Minor Channel
         """
-        self.__send__('DC2U', str(opt1.rjust(3, "0")))
-        self.__send__('DC2L', str(opt2.rjust(3, "0")))
+        if opt1 == '?':
+            return self.__send__('DC2U', '?')
+        self.__send__('DC2U', str(opt1).rjust(3, "0"))
+        return self.__send__('DC2L', str(opt2).rjust(3, "0"))
 
-    def channel_up():
+    def channel_up(self):
         """
         Description:
             Change the Channel +1
         """
         self.__send__('CHUP', 1)
 
-    def channel_down():
+    def channel_down(self):
         """
         Description:
             Change the Channel -1
