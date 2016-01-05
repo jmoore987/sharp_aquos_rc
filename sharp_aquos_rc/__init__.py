@@ -42,6 +42,14 @@ class TV:
             except ValueError:
                 return status
 
+    def info(self):
+        return {
+                    "name": self.__send__('TVNM', '1'),
+                    "model": self.__send__('MNRD', '1'),
+                    "version": self.__send__('SWVN', '1')
+                }
+
+
     def power_on_command_settings(self, opt = '?'):
         """
         Description:
