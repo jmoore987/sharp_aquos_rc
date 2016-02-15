@@ -12,12 +12,13 @@ class TV:
     URL: http://github.com/jmoore/sharp_aquos_rc
     """
     
-    def __init__(self, ip, port, username, password):
+    def __init__(self, ip, port, username, password, timeout):
         self.ip = ip
         self.port = port
         self.auth = str.encode(username + '\r' + password + '\r')
+        self.timeout = timeout
 
-    def __send__(self, code1, code2):
+    def _send_command(self, code1, code2):
         """
         Description:
             
@@ -26,16 +27,21 @@ class TV:
 
         Returns:
             If a value is being requested ( opt2 is "?" ), then the return value is returned.
-            If a value is being set, it return True for "OK" or False for "ERR"
+            If a value is being set, it returns True for "OK" or False for "ERR"
         """
 
         try:
+            # Connect
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.settimeout(5)
+            s.settimeout(self.timeout)
             s.connect((self.ip, self.port))
+
+            # Authenticate
             s.send(self.auth)
             s.recv(1024)
             s.recv(1024)
+
+            # Send command
             s.send(str.encode(code1 + str(code2).ljust(4) + '\r'))
             status = bytes.decode(s.recv(1024)).strip()
         except:
@@ -62,9 +68,9 @@ class TV:
 
         """
         return {
-                    "name": self.__send__('TVNM', '1'),
-                    "model": self.__send__('MNRD', '1'),
-                    "version": self.__send__('SWVN', '1')
+                    "name": self._send_command('TVNM', '1'),
+                    "model": self._send_command('MNRD', '1'),
+                    "version": self._send_command('SWVN', '1')
                 }
 
 
@@ -81,7 +87,7 @@ class TV:
                 1: accepted via RS232
                 2: accepted via TCP/IP
         """
-        return self.__send__('RSPW', opt)
+        return self._send_command('RSPW', opt)
 
     def power(self, opt = '?'):
         """
@@ -95,7 +101,7 @@ class TV:
                 0: Off
                 1: On
         """
-        return self.__send__('POWR', opt)
+        return self._send_command('POWR', opt)
 
     def input(self, opt = '?'):
         """
@@ -118,9 +124,9 @@ class TV:
         """
             
         if opt == 0:
-            return self.__send__('ITVD', opt)
+            return self._send_command('ITVD', opt)
         else:
-            return self.__send__('IAVD', opt)
+            return self._send_command('IAVD', opt)
         
     def av_mode(self, opt = '?'):
         """
@@ -147,7 +153,7 @@ class TV:
                 17: Movie THX
                 100: Auto
         """
-        return self.__send__('AVMD', opt)
+        return self._send_command('AVMD', opt)
 
     def volume(self, opt = '?'):
         """
@@ -160,7 +166,7 @@ class TV:
             opt: integer
             0 - 100: Volume Level
         """
-        return self.__send__('VOLM', opt)
+        return self._send_command('VOLM', opt)
 
     def view_mode(self, opt = '?'):
         """
@@ -184,7 +190,7 @@ class TV:
                 10: Auto
                 11: Original
         """
-        return self.__send__('WIDE', opt)
+        return self._send_command('WIDE', opt)
 
     def mute(self, opt = '?'):
         """
@@ -199,7 +205,7 @@ class TV:
                 1: On
                 2: Off
         """
-        return self.__send__('MUTE', opt)
+        return self._send_command('MUTE', opt)
 
     def surround(self, opt = '?'):
         """
@@ -218,7 +224,7 @@ class TV:
                 6: 3D Standard
                 7: 3D Stadium
         """
-        return self.__send__('ACSU', opt)
+        return self._send_command('ACSU', opt)
 
     def sleep(self, opt = '?'):
         """
@@ -235,7 +241,7 @@ class TV:
                 3: 90 minutes
                 4: 120 minutes
         """
-        return self.__send__('OFTM', opt)
+        return self._send_command('OFTM', opt)
 
     def analog_channel(self, opt = '?'):
         """
@@ -248,7 +254,7 @@ class TV:
             opt: integer
                 (1-135): Channel
         """
-        return self.__send__('DCCH', opt)
+        return self._send_command('DCCH', opt)
 
     def digital_channel_air(self, opt1 = '?', opt2 = 1):
         """
@@ -264,8 +270,8 @@ class TV:
                 1-99: Minor Channel
         """
         if opt1 == '?':
-            return self.__send__('DA2P', opt1)
-        return self.__send__('DA2P', (opt1 * 100) + opt2)
+            return self._send_command('DA2P', opt1)
+        return self._send_command('DA2P', (opt1 * 100) + opt2)
 
     def digital_channel_cable(self, opt1 = '?', opt2 = 1):
         """
@@ -281,23 +287,23 @@ class TV:
                 0-999: Minor Channel
         """
         if opt1 == '?':
-            return self.__send__('DC2U', '?')
-        self.__send__('DC2U', str(opt1).rjust(3, "0"))
-        return self.__send__('DC2L', str(opt2).rjust(3, "0"))
+            return self._send_command('DC2U', '?')
+        self._send_command('DC2U', str(opt1).rjust(3, "0"))
+        return self._send_command('DC2L', str(opt2).rjust(3, "0"))
 
     def channel_up(self):
         """
         Description:
             Change the Channel +1
         """
-        self.__send__('CHUP', 1)
+        self._send_command('CHUP', 1)
 
     def channel_down(self):
         """
         Description:
             Change the Channel -1
         """
-        self.__send__('CHDW', 1)
+        self._send_command('CHDW', 1)
 
         
     def remote_button(self, opt = '?'):
@@ -357,4 +363,4 @@ class TV:
                 60: AAL
                 61: MANUAL
         """
-        return self.__send__('RCKY', opt)
+        return self._send_command('RCKY', opt)
