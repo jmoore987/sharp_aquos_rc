@@ -1,9 +1,11 @@
+"""Module to control a Sharp Aquos Remote Control enabled TV."""
 import socket
 
-class TV:
+
+class TV(object):
     """
     Description:
-        Module to control a Sharp Aquos Remote Control enabled TV.
+        Class representing a Sharp Aquos TV
         Based on documentation from:
             http://files.sharpusa.com/Downloads/ForHome/HomeEntertainment/LCDTVs/Manuals/2014_TV_OM.pdf
 
@@ -11,43 +13,52 @@ class TV:
 
     URL: http://github.com/jmoore/sharp_aquos_rc
     """
-    
-    def __init__(self, ip, port, username, password, timeout):
-        self.ip = ip
+
+    def __init__(self, ip, port, username, password,  # pylint: disable=R0913
+                 timeout=5, retries=3):
+        self.ip_address = ip
         self.port = port
         self.auth = str.encode(username + '\r' + password + '\r')
         self.timeout = timeout
+        self.retries = retries
 
     def _send_command(self, code1, code2):
         """
         Description:
-            
-            The TV doesn't handle long running connections very well, so we open a new connection every time.
-            There might be a better way to do this, but it's pretty quick and resilient.
+
+            The TV doesn't handle long running connections very well,
+            so we open a new connection every time.
+            There might be a better way to do this,
+            but it's pretty quick and resilient.
 
         Returns:
-            If a value is being requested ( opt2 is "?" ), then the return value is returned.
-            If a value is being set, it returns True for "OK" or False for "ERR"
+            If a value is being requested ( opt2 is "?" ),
+            then the return value is returned.
+            If a value is being set,
+            it returns True for "OK" or False for "ERR"
         """
+        retries = self.retries
+        while retries > 0:
+            try:
+                # Connect
+                sock_con = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock_con.settimeout(self.timeout)
+                sock_con.connect((self.ip_address, self.port))
 
-        try:
-            # Connect
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.settimeout(self.timeout)
-            s.connect((self.ip, self.port))
+                # Authenticate
+                sock_con.send(self.auth)
+                sock_con.recv(1024)
+                sock_con.recv(1024)
 
-            # Authenticate
-            s.send(self.auth)
-            s.recv(1024)
-            s.recv(1024)
-
-            # Send command
-            s.send(str.encode(code1 + str(code2).ljust(4) + '\r'))
-            status = bytes.decode(s.recv(1024)).strip()
-        except:
-            raise
-        else:
-            s.close()
+                # Send command
+                sock_con.send(str.encode(code1 + str(code2).ljust(4) + '\r'))
+                status = bytes.decode(sock_con.recv(1024)).strip()
+            except OSError as exp:
+                retries -= 1
+                if retries == 0:
+                    raise exp
+            else:
+                sock_con.close()
 
         if status == "OK":
             return True
@@ -67,14 +78,12 @@ class TV:
             name, model, version
 
         """
-        return {
-                    "name": self._send_command('TVNM', '1'),
-                    "model": self._send_command('MNRD', '1'),
-                    "version": self._send_command('SWVN', '1')
-                }
+        return {"name": self._send_command('TVNM', '1'),
+                "model": self._send_command('MNRD', '1'),
+                "version": self._send_command('SWVN', '1')
+               }
 
-
-    def power_on_command_settings(self, opt = '?'):
+    def power_on_command_settings(self, opt='?'):
         """
         Description:
 
@@ -83,13 +92,13 @@ class TV:
 
         Arguments:
             opt: integer
-                0: disabled 
+                0: disabled
                 1: accepted via RS232
                 2: accepted via TCP/IP
         """
         return self._send_command('RSPW', opt)
 
-    def power(self, opt = '?'):
+    def power(self, opt='?'):
         """
         Description:
 
@@ -103,7 +112,7 @@ class TV:
         """
         return self._send_command('POWR', opt)
 
-    def input(self, opt = '?'):
+    def input(self, opt='?'):
         """
         Description:
 
@@ -122,13 +131,13 @@ class TV:
                 7: VIDEO_IN_2
                 8: PC_IN
         """
-            
+
         if opt == 0:
             return self._send_command('ITVD', opt)
         else:
             return self._send_command('IAVD', opt)
-        
-    def av_mode(self, opt = '?'):
+
+    def av_mode(self, opt='?'):
         """
         Description:
 
@@ -155,7 +164,7 @@ class TV:
         """
         return self._send_command('AVMD', opt)
 
-    def volume(self, opt = '?'):
+    def volume(self, opt='?'):
         """
         Description:
 
@@ -168,7 +177,7 @@ class TV:
         """
         return self._send_command('VOLM', opt)
 
-    def view_mode(self, opt = '?'):
+    def view_mode(self, opt='?'):
         """
         Description:
 
@@ -192,7 +201,7 @@ class TV:
         """
         return self._send_command('WIDE', opt)
 
-    def mute(self, opt = '?'):
+    def mute(self, opt='?'):
         """
         Description:
 
@@ -207,7 +216,7 @@ class TV:
         """
         return self._send_command('MUTE', opt)
 
-    def surround(self, opt = '?'):
+    def surround(self, opt='?'):
         """
         Description:
 
@@ -226,7 +235,7 @@ class TV:
         """
         return self._send_command('ACSU', opt)
 
-    def sleep(self, opt = '?'):
+    def sleep(self, opt='?'):
         """
         Description:
 
@@ -243,7 +252,7 @@ class TV:
         """
         return self._send_command('OFTM', opt)
 
-    def analog_channel(self, opt = '?'):
+    def analog_channel(self, opt='?'):
         """
         Description:
 
@@ -256,7 +265,7 @@ class TV:
         """
         return self._send_command('DCCH', opt)
 
-    def digital_channel_air(self, opt1 = '?', opt2 = 1):
+    def digital_channel_air(self, opt1='?', opt2=1):
         """
         Description:
 
@@ -273,7 +282,7 @@ class TV:
             return self._send_command('DA2P', opt1)
         return self._send_command('DA2P', (opt1 * 100) + opt2)
 
-    def digital_channel_cable(self, opt1 = '?', opt2 = 1):
+    def digital_channel_cable(self, opt1='?', opt2=1):
         """
         Description:
 
@@ -305,8 +314,7 @@ class TV:
         """
         self._send_command('CHDW', 1)
 
-        
-    def remote_button(self, opt = '?'):
+    def remote_button(self, opt='?'):
         """
         Description:
 
