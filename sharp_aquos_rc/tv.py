@@ -1,5 +1,6 @@
 """Module to control a Sharp Aquos Remote Control enabled TV."""
 import socket
+import time
 
 
 class TV(object):
@@ -15,12 +16,11 @@ class TV(object):
     """
 
     def __init__(self, ip, port, username, password,  # pylint: disable=R0913
-                 timeout=5, retries=3):
+                 timeout=5):
         self.ip_address = ip
         self.port = port
         self.auth = str.encode(username + '\r' + password + '\r')
         self.timeout = timeout
-        self.retries = retries
 
     def _send_command(self, code1, code2):
         """
@@ -37,8 +37,14 @@ class TV(object):
             If a value is being set,
             it returns True for "OK" or False for "ERR"
         """
-        retries = self.retries
-        while retries > 0:
+        # According to the documentation:
+        # http://files.sharpusa.com/Downloads/ForHome/
+        # HomeEntertainment/LCDTVs/Manuals/tel_man_LC40_46_52_60LE830U.pdf
+        # Page 58 - Communication conditions for IP
+        # The connection could be lost (but not only after 3 minutes),
+        # so we need to the remote commands to be sure about states
+        end_time = time.time() + self.timeout
+        while time.time() < end_time:
             try:
                 # Connect
                 sock_con = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -53,12 +59,16 @@ class TV(object):
                 # Send command
                 sock_con.send(str.encode(code1 + str(code2).ljust(4) + '\r'))
                 status = bytes.decode(sock_con.recv(1024)).strip()
-            except OSError as exp:
-                retries -= 1
-                if retries == 0:
+            except (OSError, socket.error) as exp:
+                time.sleep(0.1)
+                if time.time() >= end_time:
                     raise exp
             else:
                 sock_con.close()
+                # Sometimes the status is empty so
+                # We need to retry
+                if status != u'':
+                    break
 
         if status == "OK":
             return True
