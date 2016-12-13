@@ -16,11 +16,14 @@ class TV(object):
     """
 
     def __init__(self, ip, port, username, password,  # pylint: disable=R0913
-                 timeout=5):
+                 timeout=5, connection_timeout=2):
         self.ip_address = ip
         self.port = port
         self.auth = str.encode(username + '\r' + password + '\r')
         self.timeout = timeout
+        self.connection_timeout = connection_timeout
+        if self.timeout <= self.connection_timeout:
+            raise ValueError("timeout should be greater than connection_timeout")
 
     def _send_command(self, code1, code2):
         """
@@ -48,7 +51,7 @@ class TV(object):
             try:
                 # Connect
                 sock_con = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sock_con.settimeout(self.timeout)
+                sock_con.settimeout(self.connection_timeout)
                 sock_con.connect((self.ip_address, self.port))
 
                 # Authenticate
