@@ -293,7 +293,7 @@ class TV(object):
         """
         if opt1 == '?':
             return self._send_command('DA2P', opt1)
-        return self._send_command('DA2P', (opt1 * 100) + opt2)
+        return self._send_command('DA2P', '{:02d}{:02d}'.format(opt1, opt2))
 
     def digital_channel_cable(self, opt1='?', opt2=1):
         """
