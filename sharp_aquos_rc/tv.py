@@ -16,7 +16,7 @@ class TV(object):
 
     URL: http://github.com/jmoore/sharp_aquos_rc
     """
-    _VALID_COMMAND_MAPS = ["eu", "us", "cn", "ja"]
+    _VALID_COMMAND_MAPS = ["eu", "us", "cn", "jp"]
 
     def __init__(self, ip, port, username, password, command_map,  # pylint: disable=R0913
                  timeout=5, connection_timeout=2):
