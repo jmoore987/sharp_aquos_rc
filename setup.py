@@ -2,6 +2,7 @@ from distutils.core import setup
 setup(
     name = 'sharp_aquos_rc',
     packages = ['sharp_aquos_rc'],
+    package_data={'sharp_aquos_rc': ['commands/*.yaml']},
     version = '0.3.3',
     description = 'Control Sharp Aquos SmartTVs through the IP interface.',
     author = 'Jeffrey Moore',
