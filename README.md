@@ -18,7 +18,7 @@ pip install sharp_aquos_rc
 ```
 >>> import sharp_aquos_rc
 >>>
->>> tv = sharp_aquos_rc.TV('192.168.1.5', 10002, 'admin', 'password', 'us')
+>>> tv = sharp_aquos_rc.TV('192.168.1.5', 10002, 'admin', 'password')
 >>> 
 >>> tv.power() # Returns 1 if TV is on and 0 if TV is off
 1

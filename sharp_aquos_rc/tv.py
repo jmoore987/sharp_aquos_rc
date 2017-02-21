@@ -18,8 +18,8 @@ class TV(object):
     """
     _VALID_COMMAND_MAPS = ["eu", "us", "cn", "jp"]
 
-    def __init__(self, ip, port, username, password, command_map,  # pylint: disable=R0913
-                 timeout=5, connection_timeout=2):
+    def __init__(self, ip, port, username, password,  # pylint: disable=R0913
+                 timeout=5, connection_timeout=2, command_map='us'):
         self.ip_address = ip
         self.port = port
         self.auth = str.encode(username + '\r' + password + '\r')
